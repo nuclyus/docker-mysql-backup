@@ -1,0 +1,36 @@
+/backups/backup.sql {
+	
+	# Backup daily
+	daily
+	
+	# Use date as file extension
+	dateext
+	
+	# Keep 7 log files
+	rotate 8
+	
+	# Don't compress this using logrotate
+	nocompress
+	
+	# Paninc if the logfile doesn't exist! Should be touched
+	# missingok 
+	
+	# Create logfiles with these params
+	create 0770 mysql mysql
+	
+	# After each rotate, generate a new one
+	postrotate
+		
+		# Generate! We're making use of the "mysql" in the /etc/host file, courtesy of docker
+		mysqldump -h mysql > /backups/backup.sql --single-transaction --all-databases
+		
+		# Zip it
+		gzip -9f /backups/backup.sql
+		
+		# Do some stuff
+		chown mysql:mysql /backups/backup.sql.gz
+		chmod 640 /backups/backup.sql.gz
+		
+	endscript
+
+}
