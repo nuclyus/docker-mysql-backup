@@ -1,9 +1,6 @@
 FROM phusion/baseimage
 MAINTAINER Lysander Vogelzang <lysander@nuclyus.nl>
 
-# Create a user for mysql, which is unified with the backuper
-RUN useradd -u 5001 mysql
-
 # Install MariaDB. We only need mysqldump, but it's only comes in the full package
 RUN \
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0xcbcb082a1bb943db && \
@@ -11,6 +8,9 @@ echo "deb http://mariadb.mirror.iweb.com/repo/10.0/ubuntu `lsb_release -cs` main
 apt-get update && \
 DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server ftp && \
 rm -rf /var/lib/apt/lists/*
+
+# Create a user for mysql, which is unified with the backuper
+RUN useradd -u 5003 mysql
 
 # Make sure the log exists at first
 RUN \
@@ -23,10 +23,12 @@ touch /backups/backup.sql
 ADD logrotate /etc/logrotate.d/mysql-backup
 
 # Define mountable directories. (so we can retrieve the backups as well)
-VOLUME ["/backups"]
+VOLUME ["/backups", "/var/lib/mysql"]
 
 # Define working directory.
 WORKDIR /backups
 
 # Define default command.
 CMD ["/sbin/my_init"] 	
+
+# Make sure to mount your mysql data directory to this image!
